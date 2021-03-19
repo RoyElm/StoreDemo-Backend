@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node app"
   },
-  "author": "",
+  "author": "Roy Elmakies",
   "license": "ISC",
   "dependencies": {
     "cookie-parser": "^1.4.5",
