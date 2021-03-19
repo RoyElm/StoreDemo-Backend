@@ -1,6 +1,5 @@
 const mysql = require("mysql");
 
-
 const connection = mysql.createPool({
     host: config.mysql.host,
     user: config.mysql.user,

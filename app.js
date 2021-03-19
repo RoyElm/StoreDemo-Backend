@@ -9,7 +9,6 @@ const authController = require("./controller-layer/auth-controller");
 const socketHelper = require("./helpers/socket-helper");
 
 const server = express();
-
 server.use(cors());
 server.use(express.json());
 server.use(express.static(path.join(__dirname, "./frontend")));
@@ -18,6 +17,7 @@ server.use(fileUpload());
 server.use("/api/store/hats", hatController);
 server.use("/api/store/items", itemsController);
 server.use("/api/auth", authController);
+
 server.use("*", (request, response) => {
     response.sendFile(path.join(__dirname, "./frontend/index.html"));
 });
