@@ -9,7 +9,6 @@ const authController = require("./controller-layer/auth-controller");
 const socketHelper = require("./helpers/socket-helper");
 const cookieParser = require("cookie-parser");
 
-
 const server = express();
 
 server.use(cookieParser());
@@ -28,5 +27,6 @@ server.use("*", (request, response) => {
 });
 
 const port = process.env.PORT || 3001;
+
 const expressListener = server.listen(port, () => console.log("Listening..."));
 socketHelper.init(expressListener);
