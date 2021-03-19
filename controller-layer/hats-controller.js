@@ -1,10 +1,10 @@
 const express = require("express");
-const hatLogic = require("../business-logic-layer/hats-logic");
-const path = require("path");
-const { response } = require("express");
-const verifyLoggedIn = require("../middleware/verify-logged-in");
+const verifyAdmin = require("../middleware/verify-admin");
+const errorsHelper = require("../helpers/errors-helper");
 const socketHelper = require("../helpers/socket-helper");
-const Hat = require("../models/hats");
+const path = require("path");
+const hatLogic = require("../business-logic-layer/hats-logic");
+const hatModel = require("../models/hats");
 
 const router = express.Router();
 
@@ -14,18 +14,35 @@ router.get("/", async (request, response) => {
         const hats = await hatLogic.getAllHatsAsync();
         response.json(hats);
     } catch (error) {
-        response.status(500).send(error.message)
+        response.status(500).send(errorsHelper.getError(error));
     }
 })
 
-router.put("/:hatId", verifyLoggedIn, async (request, response) => {
+router.post("/", verifyAdmin, async (request, response) => {
     try {
-        const hat = new Hat(request.body);
+        const hat = new hatModel(request.body);
         const error = hat.validatePost();
-        if (error) return response.status(404).send(error.message);
-        hat.hatId = +request.params.hatId;
+        if (error) return response.status(400).json(error);
 
-        const editedHat = await hatLogic.addNewHatAsync(hat, request.files ? request.files.newImage : null);
+        const addedHat = await hatLogic.addNewHatAsync(hat, request.files ? request.files.newImage : null);
+        if (!addedHat) return response.status(400).send("Image doesn't exist or wrong file has been send");
+        response.status(201).json(addedHat);
+        socketHelper.hatAdded(addedHat);
+    } catch (err) {
+        response.status(500).send(errorsHelper.getError(err));
+    }
+})
+
+router.put("/:hatId", verifyAdmin, async (request, response) => {
+    try {
+        const hat = new hatModel(request.body);
+        const error = hat.validatePut();
+        if (error) return response.status(400).json(error);
+        hat.hatId = +request.params.hatId;
+        const editedHat = await hatLogic.updateFullHatAsync(hat, request.files ? request.files.newImage : null);
+        if (editedHat === 404) return response.status(404).send("Hat Doesn't Exist");
+        if (editedHat === 400) return response.status(404).send("Wrong file has been send");
+
         response.status(201).json(editedHat);
         socketHelper.hatUpdated(editedHat);
     }
@@ -34,23 +51,9 @@ router.put("/:hatId", verifyLoggedIn, async (request, response) => {
     }
 });
 
-// router.get("/:id", async (request, response) => {
-//     try {
-//         const id = +request.params.id;
-//         const hat = await hatLogic.getOneHatAsync(id);
-//         if (!hat) {
-//             response.status(404).send(`Hat id ${id} not found.`);
-//             return;
-//         }
-//         response.json(hat);
-//     } catch (error) {
-//         response.status(500).send(error.message)
-//     }
-// })
-
 router.get("/hatsImage/:imageName", (request, response) => {
     try {
-        const imageName = request.params.imageName;
+        const { imageName } = request.params;
         const absolutePath = path.join(__dirname, "..", "images/hatsImage", imageName);
         response.sendFile(absolutePath);
     } catch (error) {
@@ -58,25 +61,16 @@ router.get("/hatsImage/:imageName", (request, response) => {
     }
 })
 
-router.post("/", verifyLoggedIn, async (request, response) => {
-    try {
-        const hat = request.body;
-        const addedHat = await hatLogic.addNewHatAsync(hat);
-        response.status(201).json(addedHat);
-        socketHelper.hatAdded(addedHat);
-    } catch (err) {
-        response.status(500).send(err.message)
-    }
-})
 
-router.delete("/:id", verifyLoggedIn, async (request, response) => {
+
+router.delete("/:hatId", verifyAdmin, async (request, response) => {
     try {
-        const id = +request.params.id;
-        await hatLogic.deleteHatAsync(id);
+        const hatId = +request.params.hatId;
+        await hatLogic.deleteHatAsync(hatId);
         response.sendStatus(204);
-        socketHelper.hatDeleted(id);
+        socketHelper.hatDeleted(hatId);
     } catch (error) {
-        response.status(500).send(error.message)
+        response.status(500).send(errorsHelper.getError(err));
     }
 })
 

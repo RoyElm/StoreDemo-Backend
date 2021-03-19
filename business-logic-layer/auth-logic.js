@@ -1,44 +1,47 @@
 const dal = require("../data-access-layer/dal");
 const cryptoHelper = require("../helpers/crypto-helper");
-const uuid = require("uuid");
+const jwtHelper = require("../helpers/jwt-helper");
 
-// async function registerAsync(user) {
-//     user.password = cryptoHelper.hash(user.password);
-//     user.uuid = uuid.v4();
-//     const sql = `INSERT INTO users VALUES(DEFAULT,?,?, ?, ?, ?)`;
-//     /* const info = */await dal.executeAsync(sql, [user.uuid, user.firstName, user.lastName, user.email, user.password]);
 
-//     //Don't send back to frontend the Auto Increment ID!
-//     // user.id = info.insertId;
+async function registerAsync(user) {
 
-//     //Delete the password;
-//     delete user.password;
-//     // user.token = jwtHelper.getNewToken(user)
+    //Checking if email exist;
+    const verifyEmail = `SELECT email FROM users where email = ?`;
+    const existingEmailSql = await dal.executeAsync(verifyEmail, [user.email]);
+    if (existingEmailSql[0] !== undefined) return null;
 
-//     return user;
-// }
+    user.password = cryptoHelper.hash(user.password);
+    // Solve SQL injection:
+    const sql = "INSERT INTO users VALUES(DEFAULT, ?, ?, ?, ?,DEFAULT)";
+    await dal.executeAsync(sql, [user.firstName, user.lastName, user.email, user.password]);
+    delete user.password;
+
+    user.isAdmin = 0;
+    // Generate JWT token to return to frontend:
+    user.token = jwtHelper.getNewToken({ user });
+
+    return user;
+}
 
 async function loginAsync(credentials) {
 
-    //Not Recommended because need to do it for each string!;
-    // credentials.username = credentials.username.replace(/'/g, "''");
-    // credentials.password = credentials.password.replace(/'/g, "''");
-
+    // Hash user password: 
     credentials.password = cryptoHelper.hash(credentials.password);
-    //Canceling the returning of all details 
-    // const sql = `SELECT uuid,firstName,lastName,username FROM users WHERE username = '${credentials.username}' AND password = '${credentials.password}'`;
 
-    const sql = `SELECT uuid,firstName,lastName,email FROM users WHERE email = ? AND password = ?`;
+    // Solve SQL injection by sending sql + values:
+    const sql = "SELECT id, email,firstName, lastName,isAdmin FROM users WHERE email = ? AND password = ?";
+
     const users = await dal.executeAsync(sql, [credentials.email, credentials.password]);
     if (users.length === 0) return null;
     const user = users[0];
 
-    // user.token = jwtHelper.getNewToken(user)
+    // Generate JWT token to return to frontend:
+    user.token = jwtHelper.getNewToken({ user });
 
     return user;
 }
 
 module.exports = {
-    // registerAsync,
+    registerAsync,
     loginAsync
 };

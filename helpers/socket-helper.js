@@ -3,7 +3,7 @@ const io = require("socket.io");
 let socketServer;
 
 function init(expressListener) {
-    socketServer = io(expressListener, { cors: { origin: "http://localhost:3000" } });
+    socketServer = io(expressListener, { cors: { origin: "*:*" } });
     socketServer.sockets.on("connection", socket => {
         console.log("Client Connected. Total clients: ", socketServer.engine.clientsCount);
         socket.on("disconnect", () => console.log("Client Disconnected. Total clients: ", socketServer.engine.clientsCount ? socketServer.engine.clientsCount - 1 : socketServer.engine.clientsCount));
@@ -33,17 +33,6 @@ function hatDeleted(hatId) {
     socketServer.sockets.emit("msg-from-server-hat-deleted", hatId);
 }
 
-function tainerAdded(addedTrainer) {
-    socketServer.sockets.emit("msg-from-server-trainer-added", addedTrainer);
-}
-
-function trainerUpdated(updatedTrainer) {
-    socketServer.sockets.emit("msg-from-server-trainer-updated", updatedTrainer);
-}
-
-function trainerDeleted(trainerId) {
-    socketServer.sockets.emit("msg-from-server-trainer-deleted", trainerId);
-}
 
 module.exports = {
     init,
@@ -52,8 +41,5 @@ module.exports = {
     itemDeleted,
     hatAdded,
     hatUpdated,
-    hatDeleted,
-    tainerAdded,
-    trainerUpdated,
-    trainerDeleted
+    hatDeleted
 };
