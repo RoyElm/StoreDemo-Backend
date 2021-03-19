@@ -7,8 +7,13 @@ const hatController = require("./controller-layer/hats-controller");
 const itemsController = require("./controller-layer/items-controller");
 const authController = require("./controller-layer/auth-controller");
 const socketHelper = require("./helpers/socket-helper");
+const cookieParser = require("cookie-parser");
+
 
 const server = express();
+
+server.use(cookieParser());
+
 server.use(cors());
 server.use(express.json());
 server.use(express.static(path.join(__dirname, "./frontend")));
