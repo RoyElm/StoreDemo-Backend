@@ -51,11 +51,10 @@ router.put("/:itemId", verifyAdmin, async (request, response) => {
 
 router.delete("/:itemId", verifyAdmin, async (request, response) => {
     try {
-        const { itemId } = +request.params;
+        const itemId = +request.params.itemId;
         await itemsLogic.deleteItemAsync(itemId);
         response.sendStatus(204);
         socketHelper.itemDeleted(itemId);
-
     } catch (error) {
         response.status(500).send(errorsHelper.getError(err));
     }

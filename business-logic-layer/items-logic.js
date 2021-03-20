@@ -75,7 +75,7 @@ async function deleteItemAsync(itemId) {
     if (imageName)
         absolutePath = path.join(__dirname, "..", "images/itemImages/", imageName);
     if (await fs.existsSync(absolutePath)) await fs.unlinkSync(absolutePath);
-    const sql = `DELETE FROM Items WHERE itemId = ?`
+    const sql = `DELETE FROM Items WHERE itemId = ?`;
     await dal.executeAsync(sql, [itemId]);
 }
 
