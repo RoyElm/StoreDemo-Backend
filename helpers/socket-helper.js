@@ -19,7 +19,7 @@ function itemUpdated(updatedItem) {
 }
 
 function itemDeleted(itemId) {
-    socketServer.sockets.emit("msg-from-server-item-deleted", itemId);
+    socketServer.sockets.emit("msg-from-server-item-deleted", +itemId);
 }
 function hatAdded(addedHat) {
     socketServer.sockets.emit("msg-from-server-hat-added", addedHat);
@@ -30,7 +30,7 @@ function hatUpdated(updatedHat) {
 }
 
 function hatDeleted(hatId) {
-    socketServer.sockets.emit("msg-from-server-hat-deleted", hatId);
+    socketServer.sockets.emit("msg-from-server-hat-deleted", +hatId);
 }
 
 
